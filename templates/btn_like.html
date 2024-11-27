@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>좋아하는 거 선택하기</title>
+<link  href="https://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.js"></script>
+<style>
+    .fotorama-container {
+        display: flex;
+        justify-content: flex-end;
+        position: relative;
+        left: 1000px;
+        
+    }
+    </style>
+</head>
+<body>
+    <div style="width: 90%; margin: 30px auto; text-align: center;">
+        <h2>좋아하는 것 고르기</h2>
+        <b>좋아하는 거 1가지를 골라봐!!</b>
+    </div>
+
+    <div class="fotorama" style="width: 90%; margin: 10px auto 50px 15%; text-align: center;"
+     data-width="1000"
+     data-height="400"
+     data-allowfullscreen="true"
+     data-nav="thumbs" 
+     data-autoplay="true">
+     <img src="{{ url_for('static', filename='images/노래.jpg') }}" data-caption="노래"> 
+     <img src="{{ url_for('static', filename='images/운동.jpg') }}" data-caption="운동">
+     <img src="{{ url_for('static', filename='images/그림 그리기.jpg') }}" data-caption="그림 그리기">
+     <img src="{{ url_for('static', filename='images/독서.jpg') }}" data-caption="독서">
+     <img src="{{ url_for('static', filename='images/장난감.jpg') }}" data-caption="장난감">
+     <img src="{{ url_for('static', filename='images/애완동물.jpg') }}" data-caption="애완동물">
+     <img src="{{ url_for('static', filename='images/영상 보기.jpg') }}" data-caption="만화">
+     <img src="{{ url_for('static', filename='images/요리.jpg') }}" data-caption="요리">
+     
+    </div>
+    <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+        <button id="captionButton" style="margin: 0 auto 10px;">선택</button>
+        <p id="captionDisplay"></p>
+    </div>
+    <script>
+        let currentCaption = ""; // 현재 선택된 이미지의 설명을 저장할 변수
+
+        // Fotorama 초기화
+        $('.fotorama').fotorama();
+
+        // 이미지 클릭 시 설명을 변수에 저장
+        $('.fotorama').on('fotorama:showend', function (e, fotorama) {
+            currentCaption = fotorama.activeFrame.caption;
+        }); 
+
+        // 버튼 클릭 시 설명을 표시
+        $('#captionButton').click(function () 
+        {
+            $('#captionDisplay').text("선택한 취미: " + currentCaption);
+            // 사용자가 선택한 취미
+            var hobby = currentCaption;
+            localStorage.setItem('hobby', hobby); 
+
+            window.location.href = "btn_chatbot"
+            
+            var params = 'hobby=' + hobby;
+            $.ajax
+            ({
+                url: 'http://localhost:5000/generation', // Local
+                type: 'post',  // get or post
+                cache: false, // 응답 결과 임시 저장 취소
+                async: true,  // true: 비동기 통신
+                dataType: 'json', // 응답 형식: json, html, xml...
+                data: params,      // 데이터
+                success: function(rdata) // 응답이 온경우
+                { 
+                    var response = rdata.response;
+                },
+                // Ajax 통신 에러, 응답 코드가 200이 아닌경우, dataType이 다른경우
+                error: function(request, status, error) 
+                { // callback 함수
+                console.log(error);
+                }
+            });
+        });
+
+    </script>
+</body> 
+</html>

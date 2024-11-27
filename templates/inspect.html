@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설문 조사</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        body {
+            background-color: rgba(211,211,211,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            font-size: 1.2em;
+        }
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            height: 50px;
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+        td:nth-child(1), td:nth-child(4) {
+            text-align: left;
+        }
+        #calculateResults{
+            display: block;
+            margin: auto;
+            background-color: rgba(135,206,250,0.5); 
+            border-radius: 12px;
+            font-size: 2em;
+            pointer-events: auto; /* 버튼 활성화 */
+        }
+        #calculateResults.disabled {
+            pointer-events: none; /* 버튼 비활성화 */
+            background-color: lightgray;
+        }
+        h1 {
+            text-align: center;
+            font-size: 3em; 
+            color: black;
+        }
+        #results {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<script>
+    $(function () {
+        $('#calculateResults').click(function () {
+            var oCount = 0;
+            var xCount = 0;
+            // 각 질문에 대한 체크박스 상태 확인
+            var questions = $('input[type="radio"]:checked');
+            
+            // 모든 라디오 버튼이 선택되었는지 확인
+            if (questions.length < 12) {
+                alert('모든 항목에 대한 응답을 선택하세요.');
+                return;
+            }
+
+            // 체크박스 상태에 따라 개수 증가
+            questions.each(function () {
+                if ($(this).val() === 'O') {
+                    oCount++;
+                } else {
+                    xCount++;
+                }
+            });
+            
+            // 결과를 화면에 출력
+            $('#oCount').html('O의 개수: ' + oCount);
+            $('#xCount').html('X의 개수: ' + xCount);
+
+            // O의 개수에 따라 페이지 렌더링
+            if (oCount >= 5) {
+                // O의 개수가 5개 이상이면 chatbot.html 렌더링
+                window.location.href = '/chatbot';
+            } else {
+                // 그 외의 경우 btn_chatbot.html 렌더링
+                window.location.href = '/btn_chatbot';
+            }
+        });
+    });
+</script>
+
+</head> 
+<body>
+    <h1>설문 조사</h1>
+    <table>
+        <thead>
+
+            <tr>
+                <th colspan="3">언어 영역</th>
+                <th colspan="3">사회성 영역</th>
+            </tr>
+            <tr>
+                <th>질문</th>
+                <th>O</th>
+                <th>X</th>
+                <th>질문</th>
+                <th>O</th>
+                <th>X</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1. 친숙한 단어의 반대말을 말한다.</td>
+                <td><input type="radio" name="language1" value="O"></td>
+                <td><input type="radio" name="language1" value="X"></td>
+                <td>1. 처음 만난 또래와 쉽게 어울린다.</td>
+                <td><input type="radio" name="social1" value="O"></td>
+                <td><input type="radio" name="social1" value="X"></td>
+            </tr>
+            <tr>
+                <td>2. 간단한 농담이나 빗대어서 하는 말의 뜻을 알아차린다.</td>
+                <td><input type="radio" name="language2" value="O"></td>
+                <td><input type="radio" name="language2" value="X"></td>
+                <td>2. 자기 생각을 이야기하고 다른 아이의 말을 귀 기울여 듣는다.</td>
+                <td><input type="radio" name="social2" value="O"></td>
+                <td><input type="radio" name="social2" value="X"></td>
+            </tr>
+            <tr>
+                <td>3. 단어의 뜻을 물어보면 설명한다.</td>
+                <td><input type="radio" name="language3" value="O"></td>
+                <td><input type="radio" name="language3" value="X"></td>
+                <td>3. 게임을 하는 방법에 대해 다른 아이와 이야기를 나눈다.</td>
+                <td><input type="radio" name="social3" value="O"></td>
+                <td><input type="radio" name="social3" value="X"></td>
+            </tr>
+            <tr>
+                <td>4. "만약~하면 무슨 일이 일어날까?"와 같이 가상의 상황에 대한 질문에 대답한다.</td>
+                <td><input type="radio" name="language4" value="O"></td>
+                <td><input type="radio" name="language4" value="X"></td>
+                <td>4. 다른 아이들과 적극적으로 어울리려고 한다.</td>
+                <td><input type="radio" name="social4" value="O"></td>
+                <td><input type="radio" name="social4" value="X"></td>
+            </tr>
+            <tr>
+                <td>5. 이름이나 쉬운 단어 2~3개를 보고 읽는다.</td>
+                <td><input type="radio" name="language5" value="O"></td>
+                <td><input type="radio" name="language5" value="X"></td>
+                <td>5. 시키지 않고도 아는 사람에게 "안녕하세요?"라고 인사한다.</td>
+                <td><input type="radio" name="social5" value="O"></td>
+                <td><input type="radio" name="social5" value="X"></td>
+            </tr>
+            <tr>
+                <td>6. 자기 이름이나 2~4개의 글자로 된 단어를 보지 않고도 쓸 수 있다.</td>
+                <td><input type="radio" name="language6" value="O"></td>
+                <td><input type="radio" name="language6" value="X"></td>
+                <td>6. 친구에게 자기 집으로 와서 같이 놀자고 하거나, 무슨 놀이를 하자고 제안한다.</td>
+                <td><input type="radio" name="social6" value="O"></td>
+                <td><input type="radio" name="social6" value="X"></td>
+            </tr>
+        </tbody>
+    </table>
+    <button type="button" id="calculateResults">결과 보기</button>
+
+<div id="results">
+    <h2>결과</h2>
+    <p id="oCount">O의 개수: 0</p>
+    <p id="xCount">X의 개수: 0</p>
+</div>
+</body>
+</html>

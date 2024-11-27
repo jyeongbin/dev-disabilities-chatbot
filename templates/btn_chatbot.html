@@ -1,0 +1,2963 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>챗봇</title>
+<script type="text/JavaScript"
+    src="http://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<style type="text/css">
+    *{
+        margin:0;
+        padding:0;
+    }
+
+    .container {
+        width: 100%;
+        margin: 0 auto;
+        padding: 10px;
+        background-color: #E5FFCC;
+    }
+    .chat-container {
+        width: 100%;
+        height: 550px;
+        overflow: auto;
+        border: 1px solid #000000;
+        background-image: linear-gradient(rgba(255,255,255,0.6),rgba(255,255,255,0.6)), url("/static/chatbot/images/background.jpg");
+        background-size: 45%;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-attachment: fixed;
+        background-color: rgba(254,252,239);
+        margin-bottom: 20px; 
+    }
+
+    .container h3{
+        text-align: left;
+        padding: 5px 5px 5px 15px; /* top, right, bottom, left */
+        color: #4c9900;
+        border-left: 3px solid #4c9900;
+        margin-bottom: 20px;
+    } 
+    .chatting_pannel { /* 투명도 지정: linear-gradient(rgba(255,255,255,0.6),rgba(255,255,255,0.6)) */
+        padding: 5px;
+    }
+    .chatting_pannel p{
+        font-size: 20px;
+        border-radius: 10px;
+        display: inline-block;
+        padding: 2px 5px;
+    }
+    input {
+        width: 60%;
+        height: 25px;
+    }
+    .send_msg{
+        text-align: right;
+        color: #000000;
+        background-color: #ffff00;
+        margin-left: 70%;
+    }
+        .receive_msg{
+            text-align: left;
+            color: #FFFFFF;
+            background-color: #7a7373;
+            margin-right: 40%;
+        }
+
+    .send_btn{
+        text-align: right;
+        color: #000000;
+        margin: 2%;
+       padding: 1%;   
+    }
+
+    .one_choice{ 
+        text-align: justify;
+        text-indent: 82%;
+    }
+
+    .ch_btn {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn_des {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* 아이템을 가운데 정렬합니다. */
+        margin-right: 10px;
+    }
+
+    .btn_des .btn {
+        margin-bottom: 10px; /* 버튼 아래의 간격 조절 */
+    }
+
+    .btn_img{
+        width: 140px; /* 원하는 너비로 설정합니다. */
+        height: 150px; /* 원하는 높이로 설정합니다. */
+        object-fit: cover; /* 이미지를 비율 유지하며 버튼 크기에 맞게 조절합니다. */
+    }
+
+    A:link{  /* 방문전 상태 */
+        text-decoration: none; /* 밑줄 삭제 */
+        color: #FFFFFF;
+    }
+
+    A:visited{  /* 방문후 상태 */
+        text-decoration: none; /* 밑줄 삭제 */
+        color: #FFFFFF;
+    }
+
+    A:hover{  /* A 태그에 마우스가 올라간 상태 */
+        text-decoration: underline; /* 밑줄 출력 */
+        color: #FFFFFF;
+    }
+
+    A:active{  /* A 태그를 클릭한 상태 */
+        text-decoration: underline; /* 밑줄 출력 */
+        color: #FFFFFF;
+    }
+
+    #info-box {
+        display: block; /*초기에 보이도록 설정 */  
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    }
+    #intro_age, #intro_name, #intro_hobby{
+        width: 130px;
+    }
+
+    #choiceButtons, #choiceButtons2, #choiceButtons4, #choiceButtons5, #choiceButtons6, #choiceButtons7, 
+    #choiceButtons8, #choiceButtons9, #choiceButtons10, #choiceButtons11, #choiceButtons12,
+    #choiceButtons13, #choiceButtons14, #choiceButtons15, #choiceButtons16, #choiceButtons17,
+    #choiceButtons18, #choiceButtons19, #choiceButtons20, #choiceButtons21, #choiceButtons22,
+    #choiceButtons23, #choiceButtons24, #choiceButtons25, #choiceButtons26, #choiceButtons27,
+    #choiceButtons28, #choiceButtons29, #choiceButtons30, #choiceButtons31, #choiceButtons32,
+    #choiceButtons34, #choiceButtons35, #choiceButtons36, #choiceButtons37, #choiceButtons38,
+    #choiceButtons39, #choiceButtons40, #choiceButtons41, #choiceButtons42, #choiceButtons43, #choiceButtons44, 
+    #choiceButtons45, #choiceButtons46, #choiceButtons47, #choiceButtons48, #choiceButtons49, #choiceButtons50,
+    #choiceButtons51, #choiceButtons52, #choiceButtons53, #choiceButtons54, #choiceButtons55, #choiceButtons56, 
+    #choiceButtons57, #choiceButtons58, 
+    #choiceButtons59,#choiceButtons60,#choiceButtons61{
+        display:none;
+    }
+
+    .text{
+        color: red;
+    }
+
+</style>
+<script>
+
+let name = "";
+let age = 0;
+let hobby = "";
+
+$(function()
+{ 
+    // 로컬 스토리지에서 name, age, hobby 값을 가져옴
+    var storedName = localStorage.getItem('name');
+    var storedAge = localStorage.getItem('age');
+    var storedHobby = localStorage.getItem('hobby');
+
+    // 가져온 값을 input 필드에 설정
+    $('#intro_name').val(storedName);
+    $('#intro_age').val(storedAge);
+    $('#intro_hobby').val(storedHobby);
+
+    $('#question').on('keydown', function(key)
+    {
+        if (key.keyCode == 13)
+        { // Enter
+            if ($("#question").val().trim() !== "")
+            {
+                send();
+            }
+        }
+    });
+
+    $('#sendBtn').on('click', function() {
+        if ($("#question").val().trim() !== "") {
+            send();
+        }
+    });
+    
+    $('#closeBtn').on('click', function()
+    {
+        window.close(); // window.open()으로 열린 창만 닫음.
+    });
+
+    //  "좋아! 우리 친구하자" 버튼 클릭 시 
+    $('#positive_btn1').on('click', function()
+    {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons").hide();
+
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        // 1초 후에 실행
+        // 1초 후에 실행
+        setTimeout(function()
+        {
+            const answer_message = `<p class='receive_msg'>고마워 ${name}! 너 ${hobby} 좋아해?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+                // 1초 후에 실행
+            setTimeout(function()
+            {
+            // 응, 좋아해, 아니 안 좋아해, 너도 좋아해?
+            $('#choiceButtons6').show();
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초
+    });
+
+    //  "나랑 왜 친해지고싶어?" 버튼 클릭 시
+    $('#negative_btn1').on('click', function() 
+    {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons").hide();
+
+        // '이름'과 '취미' 값을 가져옴
+        setTimeout(function()
+        {
+            const answer_message = `<p class='receive_msg'>같이 이야기하면 재미있을 것 같고, 너가 궁금해 ${name}</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+                // 1초 후에 실행
+            setTimeout(function()
+            {
+            // 좋아! 우리 친구하자, 시간이 필요할 것 같아, 여기는 뭐 하는 곳이야?
+            $('#choiceButtons4').show();
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초
+    });
+
+    //  "친구 하기싫어" 버튼 클릭 시
+    $('#question_btn1').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons").hide();
+
+        setTimeout(function()
+        {
+            // '이름'과 '취미' 값을 가져옴
+            const answer_message = `<p class='receive_msg'>너의 생각을 존중해! 근데 이유를 알 수 있을까? </p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+
+            setTimeout(function()
+            {
+                // 장난이야, 친구하!, 친하지기에는 아직 낯설어, 너가 누군데?
+                $("#choiceButtons2").show();
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초
+    });   
+
+    //  negative_btn1("나랑 왜 친해지고 싶어") 클릭 하고 positive_btn4("좋아! 우리 친구하자") 버튼 클릭 시
+    $('#positive_btn4').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons4").hide();
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>고마워 ${name}! 너 ${hobby} 좋아해??</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+            $("#choiceButtons6").show(); // 응, 좋아해/ 아니 안 좋아해/ 너도 좋아해?
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초
+    });
+
+    //  negative_btn1("나랑 왜 친해지고 싶어") 클릭 하고 negative_btn4("시간이 필요할 것 같아") 버튼 클릭 시
+    $('#negative_btn4').on('click', function()
+    {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons4").hide();
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>그럼 우리 다른 이야기를 해볼까? ${name}! 너 ${hobby} 좋아해?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+            $("#choiceButtons6").show(); // 응, 좋아해/ 아니 안 좋아해/ 너도 좋아해?
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    //  negative_btn1("나랑 왜 친해지고 싶어") 클릭 하고 question_btn4("여기는 뭐 하는 곳이야?") 클릭 시
+    $('#question_btn4').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons4").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>여기는 우리와 이야기 나누는 곳이야. ${name}! 친해지고 싶어!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+            $("#choiceButtons5").show(); // 좋아! 우리 친구하자, 시간이 필요할 것 같아, 친구 하기 싫어
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    }); 
+
+    //  negative_btn1("나랑 왜 친해지고 싶어") 클릭 하고 question_btn4("여기는 뭐한는 곳이야") 클릭 시
+    $('#positive_btn5').on('click', function()  // 좋아 우리 친구하자
+    {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons5").hide();
+        
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>고마워 ${name}! 너 ${hobby} 좋아해?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+            $("#choiceButtons6").show(); // 응, 좋아해/ 아니 안 좋아해/ 너도 좋아해?
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // negative_btn1("나랑 왜 친해지고 싶어") 클릭 하고 question_btn4("여기는 뭐한는 곳이야") 클릭 시
+    $('#negative_btn5').on('click', function() {    // 시간이 필요할 것 같아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons5").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>그럼 우리 다른 이야기를 해볼까? ${name}! 너 ${hobby} 좋아해?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+            $("#choiceButtons6").show(); // 응, 좋아해/ 아니 안 좋아해/ 너도 좋아해?
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // negative_btn1("나랑 왜 친해지고 싶어") 클릭 하고 question_btn4("여기는 뭐한는 곳이야") 클릭 시
+    $('#question_btn5').on('click', function() {    // 친구 하기 싫어 클릭 시 
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons5").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>너의 생각을 존중해! 근데 이유를 알 수 있을까? </p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+            $("#choiceButtons2").show(); // 장난이야. 친구하자./ 친해지기에는 아직 낮설어/ 너가 누군데
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초       
+    });
+    
+    // question_btn1(친구하기 싫어) 클릭 후 
+    $('#positive_btn2').on('click', function() {    //장난 이야 친구하자!
+    const question = $(this).text();
+    $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+    $('#question').val("");
+    $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+    $("#choiceButtons2").hide(); 
+
+    setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>친구 하기 싫은 줄 알아서 슬펐어.. 그럼 다시 ${hobby}에 대해 이야기해 볼까?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+            $("#choiceButtons7").show(); // 좋아, 아니,괜찮아
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+     // question_btn1(친구하기 싫어) 클릭 후
+    $('#negative_btn2').on('click', function() {    // 친해지기에는 아직 낮설어
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons2").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>그럼 우리 다른 이야기를 해볼까?${name}! 너 ${hobby} 좋아해??</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+            $("#choiceButtons6").show(); // 응, 좋아해 , 아니 안 좋아해, 너도 좋아해?
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+     // question_btn1(친구하기 싫어) 클릭 후
+    $('#question_btn2').on('click', function() {    // 너가 누군데?
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons2").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>나는 마루야! 여기는 너와 내가 이야기 나누는 곳이야.</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+            $("#choiceButtons11").show(); // 좋아! 우리 친구하자, 시간이 필요한 것 같아
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // positive_btn1(좋아! 우리 친구하자) 클릭 후 
+    $('#positive_btn6').on('click', function() { // 응 좋아해 
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons6").hide();
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>나도 ${hobby} 좋아해! 너는 어떤 ${hobby} 좋아해??</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons45").show(); // 메시지 창 show
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+    
+    //  positive_btn1(좋아! 우리 친구하자) 클릭 후 
+    $('#negative_btn6').on('click', function() {    // 아니 안 좋아해
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons6").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>무엇을 좋아하는지 다시 골라줄래?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons10").show(); // 고르러 가기!, 아니, 괜찮아
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // negative_btn6(아니 안 좋아해)클릭 시 
+    $('#negative_btn10').on('click', function() {   // 아니, 괜찮아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons10").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>그럼 기분이 어떤지 물어봐도 될까?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons8").show(); // 그래
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // question_btn2(너가 누군데?) 클릭 시
+    $('#positive_btn11').on('click', function() {   // 좋아! 우리 친구하자
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons11").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>고마워 ${name}! 너 ${hobby} 좋아해??</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons6").show(); // 응, 좋아해 , 아니 안 좋아해, 너도 좋아해?
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    //  question_btn2(너가 누군데?) 클릭 시
+    $('#negative_btn11').on('click', function() {   //시간이 필요할 것 같아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons11").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>그럼 우리 다른 이야기를 해볼까? ${name}! 너 ${hobby} 좋아해??</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons6").show(); // 응, 좋아해 , 아니 안 좋아해, 너도 좋아해?
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // positive_btn1(좋아! 우리 친구하자) 클릭 시 
+    $('#question_btn6').on('click', function() {    // 너도 좋아해?
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons6").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>${hobby} 완전 좋아해! 너는 어떤 ${hobby} 좋아해?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons45").show(); // 어떤걸 좋아하는 지 입력 폼
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // positive_btn2(장난이야. 친구 하자) 클릭 시
+    $('#positive_btn7').on('click', function() {    // 좋아
+    const question = $(this).text();
+    $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+    $('#question').val("");
+    $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+    $("#choiceButtons7").hide(); 
+
+    setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>고마워 ${name}! 너 ${hobby} 좋아해?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons6").show(); // 응, 좋아해, 아니 안 좋아해, 너도 좋아해?
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // positive_btn2(장난이야. 친구 하자) 클릭 시
+    $('#negative_btn7').on('click', function() {    // 아니, 괜찮아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons7").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>그럼 기분이 어떤지 물어봐도 될까?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons8").show(); // 좋아!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+    
+    // negative_btn7(아니, 괜찮아!)클릭 시
+    $('#positive_btn8').on('click', function() {    // 좋아! 
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons8").hide();
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>고마워! 그럼 버튼을 눌러봐!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons9").show(); // 버튼
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    
+    // "고르러 가기!" 버튼을 누를 때 입력한 값들을 저장
+    $("#positive_btn10").click(function() {
+        name = $('#intro_name').val();
+        age = $('#intro_age').val();
+
+         // name과 age 값을 로컬 스토리지에 저장
+        localStorage.setItem('name', name);
+        localStorage.setItem('age', age);
+
+        // 페이지 변경
+        window.location.href = "/like";
+});
+
+    // 운동 입력 시
+    $('#positive_btn12').on('click', function() {   // 친구와 시간을 보내고 친해지는 게 좋아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons12").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>친구랑 어떤 추억이 있어?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons20").show(); 
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+    
+    // 운동 입력 시
+    $('#negative_btn12').on('click', function() {   // 운동 끝나면 기분이 좋아져
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons12").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>어떻게 기분이 좋아지는 거야?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons22").show(); // 땀 흘리고 열심히 하다 보면 좋더라
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // 운동 입력 시
+    $('#question_btn12').on('click', function() {   // 운동선수가 꿈이라서
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons12").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>멋지다! 운동 잘해?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons23").show(); 
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // 그림 그리는 것 입력했을 때
+    $('#positive_btn13').on('click', function() {   // 친구와 그림 그리면서 친해지는 게 좋아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons13").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>친구랑 어떤 추억이 있어?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons24").show();   // 어릴 때 같이 그림 그렸는데 제일 친한 친구가 됐어
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // 그림 그리는 것 입력했을 때
+    $('#negative_btn13').on('click', function() {   // 다 그렸을 때 결과물을 보면 기분이 좋아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons13").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>그림 그릴 때는 기분이 어땠어?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons25").show();   // 그릴 때는 어떤 결과가 나올지 기대 돼
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // 그림 그리는 것 입력했을 때
+    $('#question_btn13').on('click', function() {   // 화가가 되고 싶어서
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons13").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>혹시 그림 잘 그려? </p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+                setTimeout(function()
+                {
+                    $("#choiceButtons23").show();
+                }, 1000); // 1000밀리초 = 1초
+            }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // 책을 입력으로 쳤을 때
+    $('#positive_btn14').on('click', function() {   // 책을 읽으면서 상상하는 재미가 있어
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons14").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>어떤 상상을 하는지 알 수 있을까?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+
+                setTimeout(function()
+                {
+                    $("#choiceButtons27").show();   // 다음 내용이 어떨 지 상상하면서 읽어! 
+                }, 1000); // 1000밀리초 = 1초
+            }, 1000); // 1000밀리초 = 1초      
+    });
+
+    // 책을 입력으로 쳤을 때
+    $('#negative_btn14').on('click', function()
+    {   // 친구와 같이 읽으면서 친해 지는게 좋아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons14").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>친구랑 어떤 추억이 있어?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+    
+                setTimeout(function()
+                {
+                    $("#choiceButtons28").show();   // 어릴 때부터 같이 놀던 소꿉친구야!
+                }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초       
+    });
+
+    $('#question_btn14').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons14").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>엄마가 책 읽어주던 기억이 나. 그때도 좋았어!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+
+            setTimeout(function()
+            {
+                $("#choiceButtons29").show();   // 어릴 때부터 같이 놀던 소꿉친구야!
+            }, 1000); // 1000밀리초 = 1초
+    }, 1000); // 1000밀리초 = 1초       
+    });        
+
+
+
+    // 노래를 입력했을 때
+    $('#positive_btn15').on('click', function() {   // 친구와 노래 부르면서 친해지는 게 좋아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons15").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>친구랑 어떤 추억이 있어?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+    
+                setTimeout(function()
+                {
+                    $("#choiceButtons30").show();   //  친구랑 노래방에서 같이 불렀던 기억이 나!
+                }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초       
+    });
+
+    // 노래를 입력했을 때
+    $('#negative_btn15').on('click', function() {   //  가수가 꿈이라서
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons15").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>우와 멋져! 노래 잘 불러?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons31").show();    //  응 잘 불러, 아니 잘 못 불러
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초            
+    });
+
+     // 노래를 입력했을 때
+    $('#question_btn15').on('click', function() {   //  소리 지르고나면 가슴이 편해져서 좋아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons15").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>그게 어떤 기분이야?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+                setTimeout(function()
+                {
+                    $("#choiceButtons32").show();   //  후련하고 정신이 맑아지는 기분이야
+                }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초         
+    });
+
+    //  입력으로 장난감 쳤을 때
+    $('#positive_btn16').on('click', function() {   //  친구와 같이 장난감 놀이하는 게 재미있어서
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons16").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>친구랑 어떤 추억이 있어?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons34").show();   //  장난감으로 싸우는 놀이 했는데 재밌었어!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초            
+    }); 
+
+    //  입력으로 장난감 쳤을 때
+    $('#negative_btn16').on('click', function() {   //  장난감 모으는 재미가 있어서
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons16").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>장난감을 모으면 어떤 기분이 들어?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons35").show();   //  나의 것이 있다는게 만족이 돼
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초            
+    }); 
+
+    //  입력으로 장난감 쳤을 때
+    $('#question_btn16').on('click', function() {   // 친구들한테 자랑할 수 있어서
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons16").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>자랑하면 친구들 반응은 어때?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons36").show(); //    날 부러워하거나, 친구들 것도 보여주더라
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초            
+    }); 
+
+    // 애완동물을 입력으로 쳤을 때
+    $('#positive_btn17').on('click', function() {   // 만지면 느낌이 좋아서
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons17").hide();
+
+        setTimeout(function()
+        {
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+        const answer_message = `<p class='receive_msg'>느낌이 어떤데?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons37").show();   // 부드럽고 베개 만지는것 같아
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초            
+    });
+
+    // 애완동물을 입력으로 쳤을 때
+    $('#negative_btn17').on('click', function() {   //  작고 귀여워서 좋아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons17").hide();
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>맞아! 보고있으면 마음이 녹아내릴 것 같아.너도 기분이 좋아져?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons38").show();   //  마음이 편해지는 기분이야!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초            
+    });
+
+    // 애완동물을 입력으로 쳤을 때
+    $('#question_btn17').on('click', function() //  우리 집에 키우고 있어서 좋아
+    {   
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons17").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>우와 귀엽겠다! 나도 키우고싶다!</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+
+            setTimeout(function()
+            {
+                $("#choiceButtons39").show(); //    너도 키우면 되지!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    // 영상 보기를 입력으로 쳤을 때
+    $('#positive_btn18').on('click', function() {   //  표정이 웃겨서 재미있어
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons18").hide();
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>나도 그런 표정 잘 지어! 나중에 같이 보자!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                // show()넣는게 없슴
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    $('#negative_btn18').on('click', function() {   //  내가 좋아하는 캐릭터라서!
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons18").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>어떤 모습이 제일 좋아?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons40").show();   //  힘든 사람을 도와줘!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    $('#question_btn18').on('click', function() {   //멋있어서 좋아!
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons18").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>멋지다는건 어떤 느낌이야?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons41").show();   // 좋은 일을 하는 것 같은 느낌이야!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                        
+    });
+
+    //  입력으로 요리를 했을 때    
+    $('#positive_btn19').on('click', function() {   //  친구랑 같이 요리하면 친해져서 좋아!
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons19").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>친구랑 어떤 추억이 있어?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+
+            setTimeout(function()
+            {
+                $("#choiceButtons42").show();   //  같이 만들고 먹었던 기억이 나
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초             
+    });
+
+    $('#negative_btn19').on('click', function() {   //  다 만들고 나면 뿌듯해서 좋아!
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons19").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>뿌듯하다는건 어떤 느낌이야?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+
+            setTimeout(function()
+            {
+                $("#choiceButtons43").show();   //  내가 만들었다"는 기분이 좋아!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초             
+    });
+
+    $('#question_btn19').on('click', function() {   //  요리사가 꿈이라서!
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons19").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>멋지다! 요리 잘 해?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons44").show();   //  간단한 요리는 다 할 수 있어!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초             
+    });
+
+    // 운동을 입력으로 쳤을 때
+    $('#positive_btn20').on('click', function() {   //  같이 운동하는 친구인데 최고의 친구야
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons20").hide();
+        $("#choiceButtons21").show();   //  당연하지!
+
+        const answer_message = `<p class='receive_msg'>그럼 나랑 같이 운동하면 더 친해질 수 있어?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+
+    });
+
+    $('#positive_btn21').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons21").hide();
+    });
+
+    $('#positive_btn22').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons22").hide();
+    });
+
+    $('#positive_btn23').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons23").hide();
+    });
+
+    $('#negative_btn23').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons23").hide();
+    });
+
+    $('#positive_btn24').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons24").hide();
+    });
+
+    $('#positive_btn25').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons25").hide();
+    });
+
+    $('#positive_btn26').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons26").hide();
+    });
+
+    $('#negative_btn26').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons26").hide();
+    });
+
+    $('#positive_btn27').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons27").hide();
+    });
+
+    $('#positive_btn28').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons28").hide();
+    })
+
+    $('#positive_btn29').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons29").hide();
+    });
+
+    $('#positive_btn30').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons30").hide();
+    });
+
+    $('#positive_btn31').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons31").hide();
+    });
+
+    $('#negative_btn31').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons31").hide();
+    });
+
+    $('#positive_btn32').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);     
+        $("#choiceButtons32").hide();
+    });
+
+    $('#positive_btn34').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons34").hide();
+    });
+
+    $('#positive_btn35').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons35").hide();
+    });
+
+    $('#positive_btn36').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);     
+        $("#choiceButtons36").hide();
+    });
+
+    $('#positive_btn37').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);   
+        $("#choiceButtons37").hide();
+    });
+
+    $('#positive_btn38').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);  
+        $("#choiceButtons38").hide();
+    });
+
+    $('#positive_btn39').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);   
+        $("#choiceButtons39").hide();
+    });
+
+    $('#positive_btn40').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);  
+        $("#choiceButtons40").hide();
+    });
+
+    $('#positive_btn41').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);     
+        $("#choiceButtons41").hide();
+    });
+
+    $('#positive_btn42').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons42").hide();
+    });
+
+    $('#positive_btn43').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);
+        $("#choiceButtons43").hide();
+    });
+
+    $('#positive_btn44').on('click', function() {
+        const question = $(this).text();
+        sendButtonMessage(question);   
+        $("#choiceButtons44").hide();
+    });
+
+    //추가 클릭 이벤트
+    $('#positive_btn46').on('click', function() { // 친구랑 싸워서 기분이 안 좋아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons46").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>많이 속상하겠다 ${name}..왜 싸웠어?</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container'	)[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons48").show();   //  내가 싫어하는 짓을 계속 해,갖고 싶은거를 두고 싸웠어,나를 먼저 때려서 싸웠어
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+
+    $('#positive_btn48').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons48").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>그래서 싸웠구나 ${name}. 내가 기분 좋게 만들어주고 싶어! <br>하고싶은거 골라봐!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons47").show();
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+
+    $('#negative_btn48').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons48").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>그래서 싸웠구나 ${name}. 내가 기분 좋게 만들어주고 싶어! <br>하고싶은거 골라봐!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons47").show();
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+
+    $('#question_btn48').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons48").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>그래서 싸웠구나 ${name}. 내가 기분 좋게 만들어주고 싶어! <br>하고싶은거 골라봐!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons47").show();
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+
+
+    $('#negative_btn46').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons46").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>많이 속상하겠다 ${name}..대신 내가 재미있게 해줄게!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons47").show();
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+
+    $('#question_btn46').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons46").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>아무 이유없이 기분 안 좋은 날이 있지!<br>내가 기분 좋게 만들어줄게!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons47").show();
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+//수정하기
+    $('#positive_btn47').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons47").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>"영상보기"를 골랐구나! 다음 중 마음에 드는 걸 골라봐 ${name}!!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons50").show();
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+
+
+    $('#negative_btn47').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons47").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>"게임"을 골랐구나! 다음 중 마음에 드는 걸 골라봐 ${name}!!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons49").show();
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+    $('#positive_btn49').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons49").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>"버블 팝!"을 골랐구나! 난 여기서 기다릴게.<br>재밌게 보고와 ${name}!!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                window.location.href = "bubble pop"
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+    $('#negative_btn49').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons49").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>"카드 맞추기!"를 골랐구나! 난 여기서 기다릴게.<br>재밌게 하고와 ${name}!!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                window.location.href = "card"
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+
+    $('#question_btn49').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons49").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>"숫자 찾기"를 골랐구나! 난 여기서 기다릴게.<br>재밌게 하고와 ${name}!!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                window.location.href = "num find"
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+
+    $('#positive_btn50').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons50").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>"웃긴 영상"을 골랐구나! 난 여기서 기다릴게.<br>재밌게 보고와 ${name}!!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                window.location.href = "happy"
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+
+    $('#negative_btn50').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons50").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>"슬픈 때 보면 좋은 영상"을 골랐구나! 난 여기서 기다릴게.<br>재밌게 보고와 ${name}!!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                window.location.href = "sad"
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+
+
+    $('#question_btn50').on('click', function() {
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons47").hide();
+
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>"화날 때 보면 좋은 영상"을 골랐구나! 난 여기서 기다릴게.<br>재밌게 보고와 ${name}!!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                window.location.href = "angry"
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초  
+    });
+    
+
+ 
+    $('#positive_btn51').on('click', function() {   //  듣고 있으면 마음이 편안해져서 좋아!
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons51").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>마음이 편해지면 어떤 기분이야?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons53").show();   //  나쁜 생각이 안들고 기분이 좋아지는 느낌이야!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+
+    $('#negative_btn51').on('click', function() {   //  감동적인 느낌을 받을 때 인상 깊게 느껴져서 좋아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons51").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>클래식이 감동적이구나! 근데 어떤 부분이 인상적이야? </p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons54").show();   //  잔잔한 노래를 들으며 생각에 빠지면 좋은 생각만 드는 게 인상깊어!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    $('#question_btn51').on('click', function() {   //  다양한 장르를 즐기는 재미가 있어!
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons51").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>멋있다! 클래식 듣고있으면 어떤 기분이 들어?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons55").show();   //  기분이 좋아져,가끔 듣고 있으면 슬퍼져
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    $('#positive_btn52').on('click', function() {   //  박자에 맞춰 춤 추는 재미가 있어
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons52").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>오 그렇구나! 원래 춤 추는거를 좋아했어?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons56").show();   //  어릴 때부터 노래에 맞춰 춤 추는거를 좋아했어
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    $('#negative_btn52').on('click', function() {   //  친구랑 같이 춤추면서 친해지는게 좋아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons52").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>친구랑 어떤 추억이 있어?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons57").show();   //  학교 수업시간에 같이 춤 췄던 기억이나!,같이 무대에 올라가서 춤 춰 본적있어!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    $('#question_btn52').on('click', function() {   //  노래가 신나고 춤 추다보면 스트레스가 풀려서 좋아
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'> <p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons52").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>스트레스를 푸는 좋은 방법이네! 노래에 춤을 어떻게 춰? </p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons58").show();   //  간단히 엉덩이를 흘들면서 춤 춰,아무렇게나 막 추면돼!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    $('#positive_btn53').on('click', function() {   //  나쁜 생각이 안들고 기분이 좋아지는 느낌이야!
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'> <p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons53").hide();
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+
+        setTimeout(function()
+        {
+            const answer_message = `<p class='receive_msg'>그럼 기분 안 좋을때 클래식 들으면 좋겠다! 나도 한번 들어볼게.고마워ㅎㅎ</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight); 
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    $('#positive_btn54').on('click', function() {   //  잔잔한 노래를 들으며 생각에 빠지면 좋은 생각만 드는 게 인상깊어!
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'> <p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons54").hide();
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+
+        setTimeout(function()
+        {
+            const answer_message = `<p class='receive_msg'>그렇구나.처음 알았어! 나도 한번 들어볼게. 고마워!</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);     
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+
+    $('#positive_btn55').on('click', function() {   //  기분이 좋아져
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'> <p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons55").hide();
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+
+        setTimeout(function()
+        {
+            const answer_message = `<p class='receive_msg'>오호! 나도 들어봐야겠다. 고마워ㅎㅎ</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+
+
+    $('#negative_btn55').on('click', function() {   //  가끔 듣고 있으면 슬퍼져
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'> <p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons55").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>아 그래?? 왜 슬퍼져?ㅠㅠ</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons59").show();   //  노래가 인상깊어서 감동적이야
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    $('#positive_btn56').on('click', function() {   //  어릴 때부터 노래에 맞춰 춤 추는거를 좋아했어
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'> <p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons56").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>어릴 때도 재즈 좋아했어??</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons60").show();   //  응! 원래 재즈를 좋아했어
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    $('#positive_btn57').on('click', function() {   //  학교 수업시간에 같이 춤 췄던 기억이나!
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'> <p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons57").hide();
+
+        setTimeout(function()
+        {
+            // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+            const answer_message = `<p class='receive_msg'>우와 정말? 나도 춤 알려줄 수 있어?</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+            setTimeout(function()
+            {
+                $("#choiceButtons61").show();   //  그래! 나중에 같이 춤 추자. 내가 알려줄게!
+            }, 1000); // 1000밀리초 = 1초
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    $('#negative_btn57').on('click', function() {   //  같이 무대에 올라가서 춤 춰 본적있어!
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'> <p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons57").hide();
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+
+        setTimeout(function()
+        {
+            const answer_message = `<p class='receive_msg'>오! 꽤 유명했네ㅎㅎ 인기도 많았겠다!</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);   
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+
+    $('#positive_btn58').on('click', function() {   //  간단히 엉덩이를 흘들면서 춤 춰
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'> <p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons58").hide();
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+
+        setTimeout(function()
+        {
+            const answer_message = `<p class='receive_msg'>그렇구나 나중에 한번 해볼게! 아니면 같이 춤 추자 ${name}!</p><br>`;
+            $("#chatting_pannel").append(answer_message);  
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+
+    $('#negative_btn58').on('click', function() {   //  아무렇게나 막 추면돼!
+        const question = $(this).text();
+        $("#chatting_pannel").append("<div style='text-align: right'> <p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons58").hide();
+        // 가져온 '이름'과 '취미'을 포함한 메시지를 생성
+
+        setTimeout(function()
+        {
+        const answer_message = `<p class='receive_msg'>그렇구나 나중에 한번 해볼게! 아니면 같이 춤 추자 ${name}!</p><br>`;
+        $("#chatting_pannel").append(answer_message);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);    
+        }, 1000); // 1000밀리초 = 1초                  
+    });
+
+    $('#positive_btn59').on('click', function() { //노래가 인상깊어서 감동적이야
+        const question = $(this).text();
+        sendButtonMessage(question);   
+        $("#choiceButtons59").hide();
+    }); 
+
+    $('#positive_btn60').on('click', function() { //응! 원래 재즈를 좋아했어
+        const question = $(this).text();
+        sendButtonMessage(question);   
+        $("#choiceButtons60").hide();
+    }); 
+
+    $('#positive_btn61').on('click', function() { //그래! 나중에 같이 춤 추자. 내가 알려줄게!
+        const question = $(this).text();
+        sendButtonMessage(question);   
+        $("#choiceButtons61").hide();
+
+    });         
+
+    // "보기" 버튼을 누를 때 입력한 값들을 저장
+        $("#search").click(function() {
+            name = $('#intro_name').val();
+            age = $('#intro_age').val();
+
+             // name과 age 값을 로컬 스토리지에 저장
+            localStorage.setItem('name', name);
+            localStorage.setItem('age', age);
+
+            // 페이지 변경
+            window.location.href = "/btn_like";
+    });
+
+    // 그럼 기분이 어떤지 물어봐도 될까? -> positive_btn8(좋아!) 클릭 시
+    $("#positive_btn9").click(function()    //버튼 
+    {  
+        $("#choiceButtons9").hide()
+        // 클릭 이벤트 발생 시 AJAX 요청을 보냅니다.
+        $.ajax
+        ({
+            url: 'http://localhost:5000/run', // 서버의 URL
+            type: 'post', // POST 요청
+            cache: false, // 응답 결과 임시 저장 취소
+            async: true, // 비동기 통신 사용
+            dataType: 'json', // 응답 형식: JSON
+            success: function(rdata) {
+                // 서버에서 받은 응답 처리
+                var response = rdata.response;
+                if (response != null && response.trim() != '') {
+                    $("#chatting_pannel").append("<p class='receive_msg'>"+ name + " " + response + "</p><br>");
+                }
+                $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+
+                // AJAX 요청 후 1초 뒤에 버튼을 보여줌
+                setTimeout(function()
+                {   
+                $("#choiceButtons46").show();
+                }, 1000); // 1000밀리초 = 1초
+            },
+            error: function(request, status, error)
+            {
+                // AJAX 요청 에러 처리
+                console.log(error);
+            }
+        });
+    });
+    
+
+    // "저장" 버튼 클릭 이벤트 처리
+    $('#save_info').on('click', function()
+    {
+        const fullName = $('#intro_name').val(); // 입력된 전체 이름 가져오기
+    
+        // 성이 제일 앞에 있는 부분을 제거
+        name = fullName.substring(1);     
+        age = $('#intro_age').val();
+        hobby = $('#intro_hobby').val();
+
+        // <div id="info-box"> 숨기기
+        $('#info-box').hide();
+        // 이때 배경이미지를 바꿔야 할듯 
+        if (hobby === '노래') {
+            $('.chat-container').css('background-image', 'url("/static/chatbot/images/노래.png")');
+        } else if (hobby === '운동') {
+            $('.chat-container').css('background-image', 'url("/static/chatbot/images/운동.png")');
+        } else if (hobby === '그림 그리기') {
+            $('.chat-container').css('background-image', 'url("/static/chatbot/images/그림 그리기.jpg")');
+        } else if (hobby === '독서') {
+            $('.chat-container').css('background-image', 'url("/static/chatbot/images/독서.jpg")');
+        } else if (hobby === '장난감') {
+            $('.chat-container').css('background-image', 'url("/static/chatbot/images/장난감 놀이.jpg")');
+        } else if (hobby === '애완동물') {
+            $('.chat-container').css('background-image', 'url("/static/chatbot/images/애완동물.jpg")');
+        } else if (hobby === '영상 보기') {
+            $('.chat-container').css('background-image', 'url("/static/chatbot/images/영상 보기.png")');
+        } else if (hobby === '요리') {
+            $('.chat-container').css('background-image', 'url("/static/chatbot/images/요리.jpg")');
+        }
+
+        // 저장 버튼 누를 때 첫 말 나오게 설정
+        const initialMessage = "<p class='receive_msg'> 안녕 난 마루야! 나랑 친구하자! </p><br>";
+        $("#chatting_pannel").append(initialMessage);  
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+
+        
+        // 1초 후에 실행
+        setTimeout(function()
+        {
+            $('#choiceButtons').show();
+        }, 1000); // 1000밀리초 = 1초
+    });
+        // 로컬 스토리지의 모든 데이터를 삭제 (초기화)
+        localStorage.clear();
+
+});
+
+
+function scroll() {
+    let chatting_pannel = document.getElementById('chatting_pannel');
+    let question = document.getElementById('question');
+    
+    // 스크롤을 채팅창의 맨 아래로 이동
+    chatting_pannel.scrollTop = chatting_pannel.scrollHeight;
+
+    // 입력창 초기화sendButtonMessage
+    question.value = '';
+}
+
+function sendButtonMessage(question) {
+    
+    $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+    $('#question').val("");
+    $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+
+    var params = 'question=' + question;
+    $.ajax
+    ({
+        url: 'http://localhost:5000/btn_chatbot', // Local
+        type: 'post',  // get or post
+        cache: false, // 응답 결과 임시 저장 취소
+        async: true,  // true: 비동기 통신
+        dataType: 'json', // 응답 형식: json, html, xml...
+        data: params,      // 데이터
+        success: function(rdata) { // 응답이 온경우
+            // alert(rdata.response);
+            var response = rdata.response;
+            if(response != null && response.trim() != ''){
+                $("#chatting_pannel").append("<p class='receive_msg'>" + response + "</p><br>");
+            }
+            // $('#panel').html(str);  // document.getElementById('panel').innerHTML=str;
+            $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        },
+        // Ajax 통신 에러, 응답 코드가 200이 아닌경우, dataType이 다른경우
+        error: function(request, status, error) { // callback 함수
+        console.log(error);
+            }
+    });
+
+}
+
+function send() {
+    var question = $("#question").val();
+    if (question.trim() !== "") {
+        $("#chatting_pannel").append("<div style='text-align: right'><p class='send_msg'>" + question + "</p></div>");
+        $('#question').val("");
+        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+        $("#choiceButtons45").hide();
+
+        var params = 'question=' + question;
+        $.ajax({
+            url: 'http://localhost:5000/hobby', // Local
+            type: 'post',
+            cache: false,
+            async: true,
+            dataType: 'json',
+            data: params,
+            success: function (rdata) {
+                // 1초 뒤에 추가적인 동작 수행
+                setTimeout(function () {
+                    // 서버에서 받은 응답 메시지를 추가
+                    var response = rdata.response;
+                    if (response != null && response.trim() != '') {
+                        $("#chatting_pannel").append("<p class='receive_msg'>" + response + "</p><br>");
+                        $('.chat-container').scrollTop($('.chat-container')[0].scrollHeight);
+                    }
+                    // 1초 뒤에 추가적인 동작 수행
+                    setTimeout(function () {
+                        if (question.includes("축구") || question.includes("야구") || question.includes("걷기") || question.includes("볼링") || question.includes("자전거") || question.includes("수영")) {
+                            $("#choiceButtons45").hide();
+                            $("#choiceButtons12").show();
+                        } else if (question.includes("가족 그림") || question.includes("엄마") || question.includes("아빠") || question.includes("고래") || question.includes("상어") || question.includes("하마") || question.includes("호랑이") || question.includes("기린") || question.includes("코끼리") || question.includes("사자") || question.includes("나무") || question.includes("구름") || question.includes("달")) {
+                            $("#choiceButtons45").hide();
+                            $("#choiceButtons13").show();
+                        } else if (question.includes("동화") || question.includes("만화") || question.includes("소설") || question.includes("우주")) {
+                            $("#choiceButtons45").hide();
+                            $("#choiceButtons14").show();
+                        } else if (question.includes("동요") || question.includes("한국")) {
+                            $("#choiceButtons45").hide();
+                            $("#choiceButtons15").show();
+                        } else if (question.includes("클래식")){
+                            $("#choiceButtons45").hide();
+                            $("#choiceButtons51").show();                            
+                        }
+                          else if (question.includes("재즈")){
+                            $("#choiceButtons45").hide();
+                            $("#choiceButtons52").show();  
+                        }
+                          else if (question.includes("레고") || question.includes("인형") || question.includes("피규어") ) {
+                            $("#choiceButtons45").hide();
+                            $("#choiceButtons16").show();
+                        } else if (question.includes("개") || question.includes("강아지") || question.includes("고양이") || question.includes("햄스터") || question.includes("토끼") || question.includes("물고기") || question.includes("앵무새") || question.includes("잉꼬") || question.includes("조류") || question.includes("이구아나") || question.includes("거북이") || question.includes("사슴벌레") || question.includes("장수풍뎅이")) {
+                            $("#choiceButtons45").hide();
+                            $("#choiceButtons17").show();
+                        } else if (question.includes("또봇 보기") || question.includes("헬로카봇 보기") || question.includes("짱구") || question.includes("로보카폴리 보기")) {
+                            $("#choiceButtons45").hide();
+                            $("#choiceButtons18").show();
+                        } else if (question.includes("샌드위치") || question.includes("김밥") || question.includes("빵") || question.includes("쿠키") || question.includes("피자")) {
+                            $("#choiceButtons45").hide();
+                            $("#choiceButtons19").show();
+                        } else {
+
+                        }
+                    }, 1000); // 1초 지연
+                }, 1000); // 1초 지연
+            },
+            error: function (request, status, error) {
+                console.log(error);
+            }
+        });
+    }
+}
+
+
+</script>
+</head> 
+<body>
+    <div id="container" class="container">
+        <h3>영원한 친구!</h3>
+        <div class="chat-container">
+            <div id="chatting_pannel" class="chatting_pannel"></div>
+            <div id="send_btn" class="send_btn">
+
+                <div id="choiceButtons">
+                    <p id="one_choicet" style="text-align: justify; text-indent: 75%;"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn" >
+                        <div class="btn_des">
+                            <button id="positive_btn1" class="btn btn-outline-success">좋아! 우리 친구하자</button>
+                            <img src="/static/button/좋아 친구하자.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn1" class="btn btn-outline-success">나랑 왜 친해지고 싶어? </button>
+                            <img src="/static/button/나랑 왜 친해지고 싶어.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn1" class="btn btn-outline-success">친구 하기 싫어</button>
+                            <img src="/static/button/친구 하기 싫어.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+            
+                <div id="choiceButtons2"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn2" class="btn btn-outline-success">장난이야. 친구 하자!</button>
+                            <img src="/static/button/장난이야.친구하자.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn2" class="btn btn-outline-success">친해지기에는 아직 낯설어</button>
+                            <img src="/static/button/아직 낯설어.png" class="btn_img">
+                        </div>
+                        <div id="question_btn1" class="btn_des">
+                            <button id="question_btn2" class="btn btn-outline-success">너가 누군데?</button>
+                            <img src="/static/button/너가 누군데.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <div id="choiceButtons4"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn4" class="btn btn-outline-success">좋아! 우리 친구하자</button>
+                            <img src="/static/button/좋아 친구하자.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn4" class="btn btn-outline-success">시간이 필요할 것 같아</button>
+                            <img src="/static/button/시간이 필요할 것 같아.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn4" class="btn btn-outline-success">여기는 뭐 하는 곳이야?</button>
+                            <img src="/static/button/여기는 뭐 하는 곳이야.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+ 
+                <div id="choiceButtons5"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn5" class="btn btn-outline-success">좋아! 우리 친구하자</button>
+                            <img src="/static/button/좋아 친구하자.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn5" class="btn btn-outline-success">시간이 필요할 것 같아</button>
+                            <img src="/static/button/시간이 필요할 것 같아.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn5" class="btn btn-outline-success">친구 하기 싫어</button>
+                            <img src="/static/button/친구 하기 싫어.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <div id="choiceButtons11"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn11" class="btn btn-outline-success">좋아! 우리 친구하자</button>
+                            <img src="/static/button/좋아 친구하자.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn11" class="btn btn-outline-success">시간이 필요할 것 같아</button>
+                            <img src="/static/button/시간이 필요할 것 같아.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <div id="choiceButtons6"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn6" class="btn btn-outline-success">응, 좋아해</button>
+                            <img src="/static/button/응 좋아해.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn6" class="btn btn-outline-success">아니 안 좋아해</button>
+                            <img src="/static/button/아니 안 좋아해.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn6" class="btn btn-outline-success">너도 좋아해?</button>
+                            <img src="/static/button/너도 좋아해.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <div id="choiceButtons7"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn7" class="btn btn-outline-success">좋아</button>
+                            <img src="/static/button/좋아.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn7" class="btn btn-outline-success">아니, 괜찮아</button>
+                            <img src="/static/button/아니,괜찮아.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <div id="choiceButtons8"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn8" class="btn btn-outline-success">좋아!</button>
+                            <img src="/static/button/좋아.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <div id="choiceButtons9"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn9" class="btn btn-outline-success">버튼</button>
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <div id="choiceButtons10"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn10" class="btn btn-outline-success">고르러 가기!</button>
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn10" class="btn btn-outline-success">아니, 괜찮아</button>
+                            <img src="/static/button/아니,괜찮아.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                
+                <div id="choiceButtons12"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn12" class="btn btn-outline-success">친구와 시간을 보내고 친해지는 게 좋아</button>
+                            <img src="/static/button/친구와 친해지는게 좋아.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn12" class="btn btn-outline-success"> 운동 끝나면 기분이 좋아져</button>
+                            <img src="/static/button/운동 끝나면 기분이 좋아.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn12" class="btn btn-outline-success">운동선수가 꿈이라서</button>
+                            <img src="/static/button/운동선수가 꿈이라서.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--2. 그림 그리기-->
+                <div id="choiceButtons13"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn13" class="btn btn-outline-success">친구와 그림 그리면서 친해지는 게 좋아</button>
+                            <img src="/static/button/친구와 친해지는게 좋아_그림.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn13" class="btn btn-outline-success">다 그렸을 때 결과물 보면 기분이 좋아</button>
+                            <img src="/static/button/결과를 보면 기분 좋아.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn13" class="btn btn-outline-success">화가가 되고 싶어서</button>
+                            <img src="/static/button/화가가 꿈이라서.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--3. 독서-->
+                <div id="choiceButtons14"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn14" class="btn btn-outline-success">책을 읽으면서 상상하는 재미가 있어</button>
+                            <img src="/static/button/상상하는 재미가 있어.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn14" class="btn btn-outline-success">친구와 같이 읽으면서 친해지는 게 좋아</button>
+                            <img src="/static/button/친구와 친해지는게 좋아_독서.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn14" class="btn btn-outline-success">어릴 때부터 독서를 좋아했어</button>
+                            <img src="/static/button/어릴때 책 읽는걸 좋아했어.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--4. 노래-->
+                <div id="choiceButtons15"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn15" class="btn btn-outline-success">친구와 노래 부르면서 친해지는 게 좋아</button>
+                            <img src="/static/button/친구와 친해지는게 좋아_노래.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn15" class="btn btn-outline-success">가수가 꿈이라서</button>
+                            <img src="/static/button/가수가 꿈이라서.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn15" class="btn btn-outline-success">소리 지르고나면 가슴이 편해져서 좋아</button>
+                            <img src="/static/button/소리 지르고나면 가슴이 편해져.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--5. 장난감-->
+                <div id="choiceButtons16"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn16" class="btn btn-outline-success">친구와 같이 장난감 놀이하는 게 재미있어서</button>
+                            <img src="/static/button/친구와 친해지는게 좋아_장난감.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn16" class="btn btn-outline-success">장난감 모으는 재미가 있어서</button>
+                            <img src="/static/button/장난감 모으는 재미가 있어.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn16" class="btn btn-outline-success">친구들한테 자랑할 수 있어서</button>
+                            <img src="/static/button/자랑할 수 있어서.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--6. 애완동물-->
+                <div id="choiceButtons17"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn17" class="btn btn-outline-success">만지면 느낌이 좋아서</button>
+                            <img src="/static/button/만지면 느낌이 좋아.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn17" class="btn btn-outline-success">작고 귀여워서 좋아</button>
+                            <img src="/static/button/작고 귀여워서 좋아.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn17" class="btn btn-outline-success">우리 집에 키우고 있어서 좋아</button>
+                            <img src="/static/button/우리집에 키우고있어서.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--7. 영상 보기-->
+                <div id="choiceButtons18"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn18" class="btn btn-outline-success">표정이 웃겨서 재미있어</button>
+                            <img src="/static/button/표정이 웃겨서.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn18" class="btn btn-outline-success">내가 좋아하는 캐릭터라서!</button>
+                            <img src="/static/button/내가 좋아하는 캐릭터야.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn18" class="btn btn-outline-success">멋있어서 좋아!</button>
+                            <img src="/static/button/멋있어서 좋아.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--8. 요리-->  
+                <div id="choiceButtons19"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn19" class="btn btn-outline-success">친구랑 같이 요리하면 친해져서 좋아!</button>
+                            <img src="/static/button/친구와 친해지는게 좋아_요리.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn19" class="btn btn-outline-success">다 만들고 나면 뿌듯해서 좋아!</button>
+                            <img src="/static/button/다 만들면 뿌듯해.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn19" class="btn btn-outline-success">요리사가 꿈이라서!</button>
+                            <img src="/static/button/요리사가 꿈이라서.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--1-1 운동-->
+                <div id="choiceButtons20"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn20" class="btn btn-outline-success">같이 운동하는 친구인데 최고의 친구야</button>
+                            <img src="/static/button/같이 운동하는 최고의 친구야.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--1-2 운동-->
+                <div id="choiceButtons21"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn21" class="btn btn-outline-success">당연하지!</button>
+                            <img src="/static/button/당연하지.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--2-1 운동-->
+                <div id="choiceButtons22"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn22" class="btn btn-outline-success">땀 흘리고 열심히 하다 보면 좋더라</button>
+                            <img src="/static/button/땀 흘리고 열심히하다보면 좋더라.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--3-1,2 운동-->
+                <div id="choiceButtons23"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn23" class="btn btn-outline-success">응, 잘해</button>
+                            <img src="/static/button/응, 잘해.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn23" class="btn btn-outline-success">잘은 못하는데 열심히 해!</button>
+                            <img src="/static/button/잘은 못하지만 열심히해.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--1-1 그림그리기-->
+                <div id="choiceButtons24"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn24" class="btn btn-outline-success">어릴 때 같이 그림 그렸는데 제일 친한 친구가 됐어</button>
+                            <img src="/static/button/어릴 때부터 친구였어.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--2-1 그림그리기-->
+                <div id="choiceButtons25"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn25" class="btn btn-outline-success">그릴 때는 어떤 결과가 나올지 기대 돼</button>
+                            <img src="/static/button/어떤 결과가 나올지 기대돼.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--3-1,2 그림그리기-->
+                <div id="choiceButtons26"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn23" class="btn btn-outline-success">응, 잘 그려</button>
+                            <img src="/static/button/응, 잘그려.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn23" class="btn btn-outline-success">잘 그리진 못하는데 열심히 그려!</button>
+                            <img src="/static/button/잘은 못하지만 열심히해_그림.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--1-1 독서-->
+                <div id="choiceButtons27"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn27" class="btn btn-outline-success">다음 내용이 어떨 지 상상하면서 읽어!</button>
+                            <img src="/static/button/다음 내용을 상상하며 읽어.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--2-1 독서-->
+                <div id="choiceButtons28"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn28" class="btn btn-outline-success">어릴 때부터 같이 놀던 소꿉친구야!</button>
+                            <img src="/static/button/어릴때부터 친구였어_독서.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--3-1 독서-->
+                <div id="choiceButtons29"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn29" class="btn btn-outline-success">엄마가 책 읽어주던 기억이 나. 그때도 좋았어!</button>
+                            <img src="/static/button/엄마가 읽어주던 기억이 나.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--1-1 노래 -->
+                <div id="choiceButtons30"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn30" class="btn btn-outline-success">친구랑 노래방에서 같이 불렀던 기억이 나!</button>
+                            <img src="/static/button/같이 노래 부르던 기억이 나.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--2-1,2 노래-->
+                <div id="choiceButtons31"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn31" class="btn btn-outline-success">응, 잘 불러</button>
+                            <img src="/static/button/응, 잘불러.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn31" class="btn btn-outline-success">아니, 잘 못 불러</button>
+                            <img src="/static/button/아니 잘 못불러.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--3-1 노래-->
+                <div id="choiceButtons32"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn32" class="btn btn-outline-success">후련하고 정신이 맑아지는 기분이야</button>
+                            <img src="/static/button/정신이 맑아지는 기분이야.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--1-1 장난감-->
+                <div id="choiceButtons34"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn34" class="btn btn-outline-success">장난감으로 싸우는 놀이 했는데 재밌었어!</button>
+                            <img src="/static/button/장난감 놀이가 재밌어.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--2-1 장난감-->
+                <div id="choiceButtons35"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn35" class="btn btn-outline-success">나의 것이 있다는게 만족이 돼</button>
+                            <img src="/static/button/나의 것이 있는게 만족 돼.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--3-1 장난감-->
+                <div id="choiceButtons36"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn36" class="btn btn-outline-success">날 부러워하거나, 친구들 것도 보여주더라</button>
+                            <img src="/static/button/부러워하거나, 친구들도 자랑해.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--1-1 애완동물-->
+                <div id="choiceButtons37"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn37" class="btn btn-outline-success">부드럽고 베개 만지는것 같아</button>
+                            <img src="/static/button/베개 만지는 느낌이야.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+
+                <!--2-1 애완동물-->
+                <div id="choiceButtons38"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn38" class="btn btn-outline-success">마음이 편해지는 기분이야!</button>
+                            <img src="/static/button/마음이 편해지는 기분이야.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+
+                <!--3-1 애완동물-->
+                <div id="choiceButtons39"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn39" class="btn btn-outline-success">너도 키우면 되지!</button>
+                            <img src="/static/button/너도 키우면 되지.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--2-1 영상 보기-->
+                <div id="choiceButtons40"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn40" class="btn btn-outline-success">힘든 사람을 도와줘!</button>
+                            <img src="/static/button/힘든 사람을 도와줘.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--3-1 영상 보기-->
+                <div id="choiceButtons41"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn41" class="btn btn-outline-success">좋은 일을 하는 것 같은 느낌이야!</button>
+                            <img src="/static/button/좋은일을 하는 것같은 느낌이야.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--1-1 요리-->
+                <div id="choiceButtons42"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn42" class="btn btn-outline-success">같이 만들고 먹었던 기억이 나</button>
+                            <img src="/static/button/같이 만들고 먹었던 기억이 나.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--2-1 요리-->
+                <div id="choiceButtons43"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn43" class="btn btn-outline-success">"내가 만들었다"는 기분이 좋아!</button>
+                            <img src="/static/button/내가 만들었다는게 기분 좋아.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--3-1 요리-->
+                <div id="choiceButtons44"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn44" class="btn btn-outline-success">간단한 요리는 다 할 수 있어!</button>
+                            <img src="/static/button/간단한건 다 만들 수 있어.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!-- 감정인식 후-->
+                <div id="choiceButtons46"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn46" class="btn btn-outline-success">친구랑 싸워서 기분이 안 좋아</button>
+                            <img src="/static/button/친구랑 싸웠어.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn46" class="btn btn-outline-success">하고 싶은거를 하지 못하게 해</button>
+                            <img src="/static/button/하고 싶은거를 하지 못하게 해.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn46" class="btn btn-outline-success">이유없이 기분이 안 좋아</button>
+                            <img src="/static/button/이유없이 기분이 안좋아.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <div id="choiceButtons47"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn47" class="btn btn-outline-success">영상 보기</button>
+                            <img src="/static/button/영상 보기.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn47" class="btn btn-outline-success">간단한 게임하기</button>
+                            <img src="/static/button/게임하기.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!-- 게임 콘텐츠-->
+                <div id="choiceButtons49"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn49" class="btn btn-outline-success">버블 팝!</button>
+                            <img src="/static/button/버블팝.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn49" class="btn btn-outline-success">카드 맞추기!</button>
+                            <img src="/static/button/카드 맞추기.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn49" class="btn btn-outline-success">숫자 찾기!</button>
+                            <img src="/static/button/숫자 찾기.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--영상 콘텐츠-->
+                <div id="choiceButtons50"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn50" class="btn btn-outline-success">재밌는 영상</button>
+                            <img src="/static/button/재밌는.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn50" class="btn btn-outline-success">슬플 때 보면 좋은 영상</button>
+                            <img src="/static/button/슬플 때.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn50" class="btn btn-outline-success">화날 때 보면 좋은 영상</button>
+                            <img src="/static/button/화날 때.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <div id="choiceButtons48"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn48" class="btn btn-outline-success">싫어하는 짓을 계속 해</button>
+                            <img src="/static/button/싫어하는 짓을 계속 해.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn48" class="btn btn-outline-success">갖고 싶은거를 두고 싸웠어</button>
+                            <img src="/static/button/갖고 싶어서 때문에 싸웠어.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn48" class="btn btn-outline-success">나를 먼저 때려서 싸웠어</button>
+                            <img src="/static/button/때려서 싸웠어.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+
+                <!--클래식 -->
+                <div id="choiceButtons51"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn51" class="btn btn-outline-success">듣고 있으면 마음이 편안해져서 좋아!</button>
+                            <img src="/static/button/마음이 편해지는 기분이야.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn51" class="btn btn-outline-success">감동적인 느낌을 받을 때 인상 깊게 느껴져서 좋아</button>
+                            <img src="/static/button/감동적이야.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn51" class="btn btn-outline-success">다양한 장르를 즐기는 재미가 있어!</button>
+                            <img src="/static/button/다양한 장르를 즐기는 재미가 있어.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--클래식(듣고 있으면 마음이 편안해져서 좋아!)-->
+                <div id="choiceButtons53"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn53" class="btn btn-outline-success">나쁜 생각이 안들고 기분이 좋아지는 느낌이야!</button>
+                            <img src="/static/button/마음이 편해지는 기분이야.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--클래식(감동적인 느낌을 받을 때 인상 깊게 느껴져서 좋아)-->
+                <div id="choiceButtons54"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn54" class="btn btn-outline-success">잔잔한 노래를 들으며 생각에 빠지면 좋은 생각만 드는 게 인상깊어!</button>
+                            <img src="/static/button/좋은 생각만 들어.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--클래식(다양한 장르를 즐기는 재미가 있어!)-->
+                <div id="choiceButtons55"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn55" class="btn btn-outline-success">기분이 좋아져</button>
+                            <img src="/static/button/기분이 좋아져.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn55" class="btn btn-outline-success">가끔 듣고 있으면 슬퍼져</button>
+                            <img src="/static/button/가끔은 슬퍼.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--재즈-->
+                <div id="choiceButtons52"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn52" class="btn btn-outline-success">박자에 맞춰 춤 추는 재미가 있어</button>
+                            <img src="/static/button/춤 추는 재미가 있어.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn52" class="btn btn-outline-success">친구랑 같이 춤추면서 친해지는게 좋아</button>
+                            <img src="/static/button/친구와 친해지는게 좋아_재즈.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="question_btn52" class="btn btn-outline-success">노래가 신나고 춤 추다보면 스트레스가 풀려서 좋아</button>
+                            <img src="/static/button/정신이 맑아지는 기분이야.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--재즈(박자에 맞춰 춤 추는 재미가 있어)-->
+                <div id="choiceButtons56"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn56" class="btn btn-outline-success">어릴 때부터 노래에 맞춰 춤 추는거를 좋아했어</button>
+                            <img src="/static/button/어릴때부터 춤추는걸 좋아했어.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--재즈(친구랑 같이 춤추면서 친해지는게 좋아)-->
+                <div id="choiceButtons57"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn57" class="btn btn-outline-success">학교 수업시간에 같이 춤 췄던 기억이나!</button>
+                            <img src="/static/button/학교에서 췄던 기억이나.png" class="btn_img">
+                        </div>
+                        <div class="btn_des">
+                            <button id="negative_btn57" class="btn btn-outline-success">같이 무대에 올라가서 춤 춰 본적있어!</button>
+                            <img src="/static/button/무대에서 췄던 기억이나.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--재즈(노래가 신나고 춤 추다보면 스트레스가 풀려서 좋아)-->
+                <div id="choiceButtons58"> 
+                    <p class="one_choice"><strong>1개만 골라봐!</strong></p>
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn58" class="btn btn-outline-success">간단히 엉덩이를 흘들면서 춤 춰</button>
+                            <img src="/static/button/엉덩이를 흔들어.png" class="btn_img">
+                        </div>
+                     <div class="btn_des">
+                            <button id="negative_btn58" class="btn btn-outline-success">아무렇게나 막 추면돼!</button>
+                            <img src="/static/button/아무렇게나 춰.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--클레식(가끔 듣고 있으면 슬퍼져)-->
+                <div id="choiceButtons59"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn59" class="btn btn-outline-success">노래가 인상깊어서 감동적이야</button>
+                            <img src="/static/button/감동적이야.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--재즈(어릴 때부터 노래에 맞춰 춤 추는거를 좋아했어)-->
+                <div id="choiceButtons60"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn60" class="btn btn-outline-success">응! 원래 재즈를 좋아했어</button>
+                            <img src="/static/button/응 좋아해.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+
+                <!--재즈(학교 수업시간에 같이 춤 췄던 기억이나!)-->
+                <div id="choiceButtons61"> 
+                    <div class="ch_btn">
+                        <div class="btn_des">
+                            <button id="positive_btn61" class="btn btn-outline-success">그래! 나중에 같이 춤 추자. 내가 알려줄게!</button>
+                            <img src="/static/button/그래 나중에 같이하자.png" class="btn_img">
+                        </div>
+                    </div>  <!-- ch_btn -->
+                </div>
+            </div>  <!--  여기까지 send_btn -->
+        </div>  <!--  여기까지 chat-container -->
+        <div id="info-box">
+            <h3>나를 소개해보아요!</h3>
+            나의 이름은 <input id="intro_name" type="text" placeholder="이름을 적어봐!"><br>
+            나의 나이는 <input id="intro_age" type="number" min="0" placeholder="나이를 적어봐!"><br>
+            나의 취미는 <input id="intro_hobby" type="text" placeholder="">
+            <button id="search" class="btn btn-success">보기</button> <br>
+            <button id="save_info" class="btn btn-success">저장</button>
+        </div>
+
+        <div id='choiceButtons45' style='margin: 0px auto;'>
+            <p class ="text"><strong>어떤걸 좋아하는지 여기에 적어봐!</strong></p>
+            <input id="question" name='question' placeholder="보내실 메시지를 입력하세요.">
+            <button id="sendBtn" class="btn btn-success">보내기</button>
+            <button id="closeBtn" class="btn btn-success">닫기</button>
+        </div>
+    </div> <!-- 여기까지 container -->
+</body>
+</html>
