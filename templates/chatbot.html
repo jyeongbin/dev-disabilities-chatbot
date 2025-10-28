@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>마음이 챗봇 (픽토그램)</title>
+<script type="text/JavaScript" src="http://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<style type="text/css">
+    /* General Styles */
+    * { margin:0; padding:0; box-sizing: border-box; }
+    body {
+        font-family: sans-serif;
+        padding: 15px;
+        background-color: #E5FFCC; /* Original background */
+    }
+    .container {
+        max-width: 850px; /* Slightly wider */
+        margin: 10px auto;
+        background-color: #fff;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h1, h2 { text-align: center; color: #333; margin-bottom: 20px; }
+    hr { margin: 25px 0; }
+
+    /* Pictogram Options Area */
+    #pictogram-options {
+        text-align: center;
+        min-height: 100px; /* Ensure space */
+        margin-bottom: 20px;
+        border: 1px solid #e0e0e0;
+        padding: 15px;
+        background-color: #fafafa;
+        border-radius: 8px;
+    }
+    .pictogram-selection img {
+        width: 75px; /* Options size */
+        height: 75px;
+        border: 2px solid #ccc;
+        margin: 10px;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: transform 0.1s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        background-color: #fff;
+        padding: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        vertical-align: middle;
+    }
+    .pictogram-selection img:hover {
+        border-color: #007bff;
+        transform: scale(1.1);
+        box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+    }
+    .pictogram-selection img.selected-effect {
+        border-color: #28a745;
+        transform: scale(0.9);
+    }
+
+    /* Selected Sequence Area */
+    #selected-sequence {
+        min-height: 70px;
+        border: 2px dashed #b0b0b0; /* Dashed border */
+        padding: 12px;
+        margin-bottom: 15px;
+        background-color: #f5f5f5;
+        border-radius: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    #selected-sequence img {
+        width: 50px; /* Size in sequence */
+        height: 50px;
+        margin-right: 6px;
+        margin-bottom: 6px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #fff;
+    }
+
+    /* Control Buttons */
+    .control-buttons {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+    .control-buttons button {
+        margin: 0 10px;
+        padding: 12px 18px;
+        cursor: pointer;
+        border-radius: 8px;
+        font-size: 1.15em;
+        font-weight: bold;
+        border: none;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        transition: background-color 0.2s ease;
+    }
+    #back-button { background-color: #ffc107; color: #333; }
+    #clear-button { background-color: #dc3545; color: white; }
+    #send-button { background-color: #28a745; color: white; }
+    #back-button:hover { background-color: #e0a800; }
+    #clear-button:hover { background-color: #c82333; }
+    #send-button:hover { background-color: #218838; }
+
+    /* Chat Output Area (Adapted from original chatbot.html) */
+    #chat-output { /* Replaces original .chat-container */
+        width: 100%;
+        height: 400px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        background-color: #ffffff;
+        padding: 15px;
+        margin-top: 20px;
+        border-radius: 8px;
+        /* Consider removing background image if distracting */
+        /* background-image: linear-gradient(...), url(...); */
+        /* background-size: ... */
+    }
+    .message { margin-bottom: 12px; padding: 10px 15px; border-radius: 18px; max-width: 85%; word-wrap: break-word; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .user-message { background-color: #DCF8C6; margin-left: auto; border-bottom-right-radius: 5px; text-align: right; }
+    .bot-message { background-color: #f1f0f0; margin-right: auto; border-bottom-left-radius: 5px; }
+    .user-message img, .bot-message img { width: 25px; height: 25px; vertical-align: middle; margin: 0 3px; }
+    .loading-message, .error-message { font-style: italic; color: #6c757d; background-color: #e9ecef; }
+
+    /* Info Box Style (from original) */
+    #info-box { margin-top: 25px; padding: 15px; border: 1px solid #ced4da; border-radius: 8px; background-color: #f8f9fa; }
+    #info-box h3 { margin-bottom: 10px; font-size: 1.2em; }
+    #info-box input { margin-bottom: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+    #info-box button { margin-top: 5px; }
+
+    /* Hide Original Elements */
+    #question, #sendBtn, #closeBtn { display: none; } /* Hide original text input and buttons */
+    /* You might need to hide .ch_btn, .btn_des etc. if they conflict, or remove them entirely */
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>마음이랑 대화하기 🤖</h1>
+
+    <h2>만들고 있는 질문:</h2>
+    <div id="selected-sequence"></div>
+
+    <div class="control-buttons">
+        <button id="back-button" title="마지막 선택 취소">↩️ 되돌리기</button>
+        <button id="clear-button" title="전체 선택 취소">🔄️ 다시 선택</button>
+        <button id="send-button" title="선택 완료 후 질문 보내기">➡️ 질문 보내기</button>
+    </div>
+
+    <hr>
+
+    <h2>다음에 올 그림을 골라보세요:</h2>
+    <div id="pictogram-options" class="pictogram-selection">
+        </div>
+
+    <h2>대화 내용:</h2>
+    <div id="chat-output">
+        </div>
+
+    <div id="info-box">
+        <h3>나를 소개해보아요!</h3>
+        나의 이름은 <input id="intro_name" type="text" placeholder="이름을 적어봐!"><br>
+        나의 나이는 <input id="intro_age" type="number" min="0" placeholder="나이를 적어봐!"><br>
+        나의 취미는 <input id="intro_hobby" type="text" placeholder="좋아하는 것을 골라봐!">
+        <button id="search" class="btn btn-info">보기</button> <br>
+        <button id="save_info" class="btn btn-primary">저장하고 취미 알려주기</button>
+    </div>
+
+    </div> <script src="{{ url_for('static', filename='pictogramData.js') }}"></script>
+
+<script>
+    // --- 1. DOM Element References ---
+    const optionsDiv = document.getElementById('pictogram-options');
+    const selectedSequenceDiv = document.getElementById('selected-sequence');
+    const sendButton = document.getElementById('send-button');
+    const clearButton = document.getElementById('clear-button');
+    const backButton = document.getElementById('back-button');
+    const chatOutput = document.getElementById('chat-output');
+    // Info-box elements
+    const introName = document.getElementById('intro_name');
+    const introAge = document.getElementById('intro_age');
+    const introHobby = document.getElementById('intro_hobby');
+    const saveInfoButton = document.getElementById('save_info');
+    const searchButton = document.getElementById('search'); // '보기' button
+
+    // --- 2. State Management ---
+    let selectedPictograms = []; // Stores {image, alt, text, role}
+
+    // --- 3. Core Functions --- (displayOptions, renderSelectedSequence, getNextOptions, displayMessage - Use latest versions from previous answers)
+
+    function displayOptions(options) {
+        optionsDiv.innerHTML = '';
+        options.forEach(p => {
+            if (!p) return;
+            const img = document.createElement('img');
+            img.src = p.image;
+            img.alt = p.text;
+            img.dataset.text = p.text;
+            img.dataset.role = p.role;
+            // Add Bootstrap tooltip for better accessibility
+            $(img).attr('data-toggle', 'tooltip').attr('title', p.text).tooltip();
+            optionsDiv.appendChild(img);
+        });
+        // Reinitialize tooltips after adding new elements
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+
+    function renderSelectedSequence() {
+        selectedSequenceDiv.innerHTML = '';
+        selectedPictograms.forEach(p => {
+            const img = document.createElement('img');
+            img.src = p.image;
+            img.alt = p.text;
+             // Add Bootstrap tooltip for selected items too
+            $(img).attr('data-toggle', 'tooltip').attr('title', p.text).tooltip();
+            selectedSequenceDiv.appendChild(img);
+        });
+         // Reinitialize tooltips
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+
+    function getNextOptions(currentSequence) {
+        // --- Paste the latest/best version of getNextOptions function here ---
+        // Ensure it uses pictogramData correctly
+        const nextRoles = [];
+        const lastItem = currentSequence.length > 0 ? currentSequence[currentSequence.length - 1] : null;
+
+        if (!lastItem) { nextRoles.push('subject'); }
+        else {
+            const lastRole = lastItem.role;
+            const hasSubject = currentSequence.some(p => p.role === 'subject');
+
+            if (lastRole.includes('subject')) {
+                if (!currentSequence.some(p => p.role === 'when')) nextRoles.push('when');
+                if (!currentSequence.some(p => p.role === 'where')) nextRoles.push('where');
+                nextRoles.push('verb');
+            } else if (lastRole.includes('when') || lastRole.includes('where')) {
+                if (!hasSubject) nextRoles.push('subject');
+                nextRoles.push('verb');
+            } else if (lastRole.includes('verb')) {
+                if (['먹다', '만들다', '주다', '받다', '보다', '듣다', '좋아하다'].includes(lastItem.text)) nextRoles.push('object');
+                nextRoles.push('adjective', 'where', 'how', 'end');
+            } else if (lastRole.includes('object') || lastRole.includes('hobby')) {
+                nextRoles.push('verb', 'adjective', 'end');
+            } else if (lastRole.includes('adjective') || lastRole.includes('how')) {
+                nextRoles.push('end', 'why');
+            } else if (lastRole.includes('phrase')) {
+                nextRoles.push('end', 'subject');
+            } else { nextRoles.push('subject'); }
+            if (currentSequence.length > 0 && !nextRoles.includes('end') && !lastRole.includes('end')) nextRoles.push('end'); // Always offer 'end'
+        }
+
+        let suggestions = [];
+        const addedTexts = new Set(currentSequence.map(p => p.text));
+        const usedSuggestionTexts = new Set();
+
+        for (const role of nextRoles) {
+            let candidates = pictogramData.filter(p => p.role.includes(role) && !addedTexts.has(p.text) && !usedSuggestionTexts.has(p.text));
+            candidates.sort(() => Math.random() - 0.5);
+            if (candidates.length > 0) {
+                 suggestions.push(candidates[0]);
+                 usedSuggestionTexts.add(candidates[0].text);
+            }
+            if (suggestions.length >= 3) break;
+        }
+
+        let attempts = 0;
+        while (suggestions.length < 3 && attempts < pictogramData.length * 2) {
+             const randomPick = pictogramData[Math.floor(Math.random() * pictogramData.length)];
+             if (!randomPick.role.includes('end') && !usedSuggestionTexts.has(randomPick.text) && !addedTexts.has(randomPick.text)) {
+                  suggestions.push(randomPick);
+                  usedSuggestionTexts.add(randomPick.text);
+             }
+             attempts++;
+        }
+        // Ensure unique suggestions, padding if necessary and possible
+        let finalSuggestions = Array.from(new Set(suggestions.map(s => s.text))).map(text => suggestions.find(s => s.text === text)).slice(0, 3);
+        // Add padding if still less than 3
+        attempts = 0;
+        while(finalSuggestions.length < 3 && attempts < pictogramData.length * 2){
+            const randomPick = pictogramData[Math.floor(Math.random() * pictogramData.length)];
+             if (!randomPick.role.includes('end') && !finalSuggestions.some(s => s.text === randomPick.text) && !addedTexts.has(randomPick.text)) {
+                 finalSuggestions.push(randomPick);
+             }
+             attempts++;
+        }
+
+        return finalSuggestions.slice(0, 3);
+    }
+
+
+    function displayMessage(message, isUser = false) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+        if (isUser) messageElement.classList.add('user-message');
+        else messageElement.classList.add('bot-message');
+        if (message.includes('생각 중...')) messageElement.classList.add('loading-message');
+        if (message.includes('오류가 발생했어요')) messageElement.classList.add('error-message');
+        messageElement.innerHTML = message;
+        chatOutput.appendChild(messageElement);
+        chatOutput.scrollTop = chatOutput.scrollHeight;
+    }
+
+    // --- 4. Event Listeners ---
+
+    // Option Click
+    optionsDiv.addEventListener('click', function(event) {
+        if (event.target.tagName === 'IMG') {
+            const clickedImg = event.target;
+            const pictogram = pictogramData.find(p => p.image === clickedImg.getAttribute('src')); // Find by image path
+
+            if (!pictogram) {
+                 console.error("Data not found for image:", clickedImg.getAttribute('src'));
+                 // Try finding by text as fallback (less reliable if texts aren't unique)
+                 // const pictogramFallback = pictogramData.find(p => p.text === clickedImg.dataset.text);
+                 // if (!pictogramFallback) return;
+                 // pictogram = pictogramFallback;
+                 return; // Strict check: stop if not found by image path
+            }
+
+            clickedImg.classList.add('selected-effect');
+            setTimeout(() => { clickedImg.classList.remove('selected-effect'); }, 150);
+
+            selectedPictograms.push(pictogram);
+            renderSelectedSequence();
+            const nextOptions = getNextOptions(selectedPictograms);
+            displayOptions(nextOptions);
+        }
+    });
+
+    // Back Button
+    backButton.addEventListener('click', function() {
+        // Hide existing tooltips before removing element
+        $('#selected-sequence img').tooltip('hide');
+        if (selectedPictograms.length > 0) {
+            selectedPictograms.pop();
+            renderSelectedSequence();
+            const nextOptions = getNextOptions(selectedPictograms);
+            displayOptions(nextOptions);
+        }
+    });
+
+    // Clear Button
+    clearButton.addEventListener('click', function() {
+        // Hide existing tooltips
+        $('#selected-sequence img').tooltip('hide');
+        selectedPictograms = [];
+        renderSelectedSequence();
+        const initialOptions = getNextOptions([]);
+        displayOptions(initialOptions);
+    });
+
+    // Send Button
+    sendButton.addEventListener('click', async function() {
+        if (selectedPictograms.length === 0) {
+            alert("픽토그램을 먼저 선택해주세요!");
+            return;
+        }
+        const questionText = selectedPictograms.map(p => p.text).join(' ');
+        console.log("Sending question:", questionText);
+
+        const userMsgHtml = selectedPictograms.map(p => `<img src="${p.image}" alt="${p.text}">`).join(' ');
+        displayMessage(`👤: ${userMsgHtml}`, true);
+
+        // Hide tooltips before clearing
+        $('#selected-sequence img').tooltip('hide');
+        // Reset UI
+        selectedPictograms = [];
+        renderSelectedSequence();
+        const initialOptions = getNextOptions([]);
+        displayOptions(initialOptions);
+
+        let thinkingMsg = null;
+        try {
+            displayMessage('🤖 마음이: 생각 중...', false);
+            thinkingMsg = chatOutput.lastElementChild;
+
+            const response = await fetch('/chatbot', { // POST to /chatbot
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: new URLSearchParams({'question': questionText})
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const result = await response.json();
+            console.log("Server response:", result.response);
+
+            if(thinkingMsg) {
+                thinkingMsg.innerHTML = `🤖 마음이: ${result.response}`;
+                thinkingMsg.classList.remove('loading-message');
+            } else { displayMessage(`🤖 마음이: ${result.response}`, false); }
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+
+        } catch (error) {
+            console.error('Error sending/receiving chat:', error);
+            const errorText = '🤖 마음이: 앗! 대답하는데 문제가 생겼어요. 다시 시도해 줄래요?';
+            if (thinkingMsg) {
+                thinkingMsg.innerHTML = errorText;
+                thinkingMsg.classList.remove('loading-message');
+                thinkingMsg.classList.add('error-message');
+            } else { displayMessage(errorText, false); }
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+    });
+
+    // Save Info Button (Sends hobby to /generation)
+    if (saveInfoButton) {
+        saveInfoButton.addEventListener('click', async function() {
+            const name = introName.value.trim();
+            const age = introAge.value;
+            const hobby = introHobby.value.trim(); // Assume hobby is typed/selected
+
+            if (!name || !age || !hobby) {
+                alert("이름, 나이, 취미를 모두 입력하거나 선택해주세요.");
+                return;
+            }
+            // Basic validation for hobby (check if it exists in pictogramData maybe?)
+            const isValidHobby = pictogramData.some(p => p.role === 'hobby' && p.text === hobby);
+            if (!isValidHobby) {
+                 // You might want to list available hobbies here or use a dropdown/selection instead of text input
+                 alert(`'${hobby}'는 선택 가능한 취미가 아니에요. (예: 운동, 요리, 그림 그리기 등)`);
+                 return;
+            }
+
+            console.log("Saving info:", { name, age, hobby });
+            // Display info in chat?
+            displayMessage(`👤: 내 이름은 ${name}, ${age}살이고 ${hobby}를 좋아해!`, true);
+
+            // Send hobby to server to initialize the correct chatbot model
+            try {
+                 displayMessage('🤖 마음이: ${hobby}에 대해 알려줄게! 잠시만 기다려줘...', false); // Indicate loading
+                 const loadingHobbyMsg = chatOutput.lastElementChild;
+
+                 const response = await fetch('/generation', {
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                      body: new URLSearchParams({'hobby': hobby})
+                 });
+                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                 const result = await response.json(); // Expect { message: '...' }
+
+                 // Update loading message
+                 if (loadingHobbyMsg) {
+                      loadingHobbyMsg.innerHTML = `🤖 마음이: 좋아! 이제 ${hobby}에 대해 이야기해보자!`;
+                 }
+                 console.log("Hobby sent, server responded:", result.message);
+
+            } catch (error) {
+                 console.error("Error sending hobby:", error);
+                 const errorHobbyMsg = chatOutput.lastElementChild;
+                 if(errorHobbyMsg && errorHobbyMsg.textContent.includes('기다려줘')) {
+                    errorHobbyMsg.innerHTML = `🤖 마음이: 앗! 취미 정보를 처리하는데 문제가 생겼어.`;
+                    errorHobbyMsg.classList.add('error-message');
+                 } else {
+                    displayMessage(`🤖 마음이: 앗! 취미 정보를 처리하는데 문제가 생겼어.`, false);
+                 }
+            }
+        });
+    }
+
+    // '보기' button - Placeholder action (you can define its purpose)
+    if (searchButton) {
+        searchButton.addEventListener('click', function(){
+            alert("'보기' 버튼은 아직 기능이 없어요!");
+            // Or maybe link to like.html? window.location.href = '/like';
+        });
+    }
+
+    // --- 5. Initial Setup ---
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof pictogramData === 'undefined' || !Array.isArray(pictogramData) || pictogramData.length === 0) {
+             console.error("pictogramData Error: Not loaded or empty. Check pictogramData.js path and content.");
+             alert("픽토그램 데이터를 불러오지 못했습니다. pictogramData.js 파일을 확인해주세요.");
+             optionsDiv.innerHTML = "<p style='color:red; font-weight:bold;'>픽토그램 로딩 오류!</p>";
+             return;
+        }
+        console.log(`Successfully loaded ${pictogramData.length} pictograms.`);
+        // Initialize Bootstrap tooltips
+        $(function () { $('[data-toggle="tooltip"]').tooltip() });
+        const initialOptions = getNextOptions([]);
+        displayOptions(initialOptions);
+        displayMessage("🤖 마음이: 안녕! 픽토그램으로 나에게 말을 걸어봐!", false);
+    });
+
+</script>
+
+</body>
+</html>
